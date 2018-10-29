@@ -13,7 +13,7 @@ import (
 
 type rawTime []byte
 
-// Convert []byte date from BD to format time.Time
+// Convert []byte date from DB to format time.Time
 func (t rawTime) Time() (time.Time, error) {
 	return time.Parse("2006-01-02", string(t))
 }
@@ -128,6 +128,52 @@ func DataChartLineDB(date []time.Time) ([][]string, error) {
 		slice = append(slice, []string{t.Format("\"02.01\","), brand, strconv.Itoa(productcount)})
 	}
 
+	return slice, nil
+}
+
+//DataChartLineDB read data from DB
+func DataChartLineCountDayDB(date []time.Time) ([][]string, error) {
+	var (
+		timeEmpty                  time.Time
+		slice                      [][]string
+		sliceDate, sliceCountBrand []string
+	)
+	db, err := connectDB()
+	if err != nil {
+		return nil, fmt.Errorf("Error func ReadDB:__ %s", err)
+	}
+	defer db.Close()
+
+	if date[1] == timeEmpty {
+		date[1] = date[0]
+	}
+
+	row, err := db.Query(`select date_parse, count(brand) from brands where date_parse between ? and ? group by date_parse`, date[0], date[1])
+	if err != nil {
+		return nil, fmt.Errorf("Error func ReadDB method Query:__ %s", err)
+	}
+	defer row.Close()
+
+	for row.Next() {
+		var (
+			dateparse    rawTime
+			productcount int
+		)
+
+		if err := row.Scan(&dateparse, &productcount); err != nil {
+			return nil, fmt.Errorf("Error func ReadDB method Scan:__ %s", err)
+		}
+
+		//Formate date from Base
+		t, err := dateparse.Time()
+		if err != nil {
+			return nil, err
+		}
+		sliceDate = append(sliceDate, t.Format("\"02.01\","))
+		sliceCountBrand = append(sliceCountBrand, strconv.Itoa(productcount)+",")
+
+	}
+	slice = append(slice, sliceDate, sliceCountBrand)
 	return slice, nil
 }
 

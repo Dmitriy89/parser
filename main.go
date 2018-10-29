@@ -366,10 +366,14 @@ func main() {
 		err := myreports.ChartHBar(yc.Date)
 		errLogger(err)
 	case chartLine:
-		errLG := myreports.ChartLineGeneral(yc.Date)
-		errLogger(errLG)
-		errLI := myreports.ChartLineIndividual(yc.Date)
-		errLogger(errLI)
+		/*
+			errLG := myreports.ChartLineGeneral(yc.Date)
+			errLogger(errLG)
+			errLI := myreports.ChartLineIndividual(yc.Date)
+			errLogger(errLI)
+		*/
+		errLCD := myreports.ChartLineCountDay(yc.Date)
+		errLogger(errLCD)
 	default:
 		var brand []сountBrand
 

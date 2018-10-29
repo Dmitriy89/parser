@@ -22,7 +22,7 @@ func (c *chartline) Append(s string, i string) {
 }
 
 // RGBA return color chart
-func RGBA(count int) []string {
+func rgba(count int) []string {
 	var (
 		slice []string
 		f     func() string
@@ -55,7 +55,7 @@ func ChartHBar(st []time.Time) error {
 
 	sliceBrandHTML := make([]string, 0)
 	sliceCountBrandHTML := make([]string, 0)
-	color := RGBA(len(countBrandBD) / 2)
+	color := rgba(len(countBrandBD) / 2)
 
 	w = 450
 	h = 450
@@ -112,7 +112,7 @@ func ChartHBar(st []time.Time) error {
 	return nil
 }
 
-//ChartLineGeneral create chart line
+//ChartLineGeneral create general chart line all brands
 func ChartLineGeneral(st []time.Time) error {
 	var maxDate []string
 	var arrayOption string
@@ -144,7 +144,7 @@ func ChartLineGeneral(st []time.Time) error {
 			maxDate = make([]string, len(val.date))
 			copy(maxDate, val.date)
 		}
-		color := RGBA(len(sliceHash))
+		color := rgba(len(sliceHash))
 		s := fmt.Sprintf(`{
 			label: "%s",
 			data: %s,
@@ -199,7 +199,7 @@ func ChartLineGeneral(st []time.Time) error {
 	return nil
 }
 
-//ChartLineIndividual create chart line
+//ChartLineIndividual create chart line individually for each brand
 func ChartLineIndividual(st []time.Time) error {
 	var (
 		maxDate     []string
@@ -299,5 +299,64 @@ func ChartLineIndividual(st []time.Time) error {
 	read := strings.NewReader(s)
 	io.Copy(html, read)
 
+	return nil
+}
+
+//ChartLineCountDay create chart line and adds all brands in a day
+func ChartLineCountDay(st []time.Time) error {
+
+	sliceDB, err := DataChartLineCountDayDB(st)
+	if err != nil {
+		return fmt.Errorf("Error func ChartLineCountDay method ReadDB:__ %s", err)
+	}
+
+	html, err := os.Create("indexLineCountDay.html")
+	if err != nil {
+		return fmt.Errorf("Error func ChartLineCountDay method Create:__ %s", err)
+	}
+
+	s := fmt.Sprintf(`<!DOCTYPE html>
+				<html>
+				<head>
+					<title>ЦУМ</title
+					<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+					<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js"></script>
+					<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+				</head>
+				<body>
+					<canvas id='Chart' width='1000' height='500'></canvas>
+					<script>
+						var ctx = document.getElementById("Chart").getContext('2d');
+						var myChart = new Chart(ctx, {
+							type: 'line',
+							data: {
+								labels: %s,
+								datasets: [{
+									label: "Brands",
+									data: %s,
+									fill: false,
+									borderColor: 'rgba(231,156,59,0.4)',
+									backgroundColor: 'rgba(231,156,59,0.7)'
+								}]
+							},
+							options: {
+								plugins: {
+									datalabels: {
+										anchor: "start",
+										align: "end"
+									}
+								},
+								responsive: true,
+								legend: {
+									display: false
+								}
+							}
+						})
+					</script>
+				</body>
+				</html>`, sliceDB[0], sliceDB[1])
+	read := strings.NewReader(s)
+	io.Copy(html, read)
 	return nil
 }
